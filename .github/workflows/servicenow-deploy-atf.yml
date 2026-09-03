@@ -87,6 +87,7 @@ jobs:
             )
           
           EXEC_ID=$(echo $RESPONSE | jq -r '.result.links.progress.id // .result.execution_id')
+          echo "$RESPONSE"
           
           # 進捗のポーリング待機
           STATUS="pending"
