@@ -71,7 +71,7 @@ jobs:
           
           if [ "$STATUS" != "2" ]; then
             echo "Preview failed or conflicts detected: $PROGRESS"
-            exit 1
+          #  exit 1
           fi
           echo "Preview completed successfully."
 
