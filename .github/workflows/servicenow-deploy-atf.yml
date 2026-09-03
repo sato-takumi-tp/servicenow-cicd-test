@@ -37,12 +37,13 @@ jobs:
             PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
               --header "Accept: application/json" \
               --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
+            echo "REMOTE_UPDATE_SET=$PROGRESS | jq -r '.result.remote_update_set_id'" >> $GITHUB_ENV
           #  STATUS=$(echo $PROGRESS | jq -r '.result.status')
           #done
           
           #if [ "$STATUS" != "2" ]; then
           #  echo "$STATUS"
-            echo "Retrieve failed: $PROGRESS"
+          #  echo "Retrieve failed: $PROGRESS"
           #  exit 1
           #fi
           #echo "Retrieve completed successfully."
@@ -51,7 +52,7 @@ jobs:
         id: preview
         run: |
           echo "Starting Update Set Preview..."
-          echo $PROGRESS | jq -r '.result.remote_update_set_id'
+          echo "$REMOTE_UPDATE_SET"
           RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/update_set/preview/$(echo $PROGRESS | jq -r '.result.remote_update_set_id')" \
             --header "Accept: application/json" \
             --header "Content-Type: application/json" \
