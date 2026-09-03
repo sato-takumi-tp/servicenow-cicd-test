@@ -40,7 +40,7 @@ jobs:
             STATUS=$(echo $PROGRESS | jq -r '.result.status_label')
           done
           
-          if [ "$STATUS" != "successful" ]; then
+          if [ "$STATUS" != "Successful" ]; then
             echo "Retrieve failed: $PROGRESS"
             exit 1
           fi
