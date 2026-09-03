@@ -41,6 +41,7 @@ jobs:
           done
           
           if [ "$STATUS" != "2" ]; then
+            echo "$STATUS"
             echo "Retrieve failed: $PROGRESS"
             exit 1
           fi
