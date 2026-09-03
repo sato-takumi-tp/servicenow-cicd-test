@@ -41,7 +41,6 @@ jobs:
             STATUS=$(echo $PROGRESS | jq -r '.result.status')
           done
 
-          echo "$STATUS"
           if [ "$STATUS" != "2" ]; then
             echo "Retrieve failed: $PROGRESS"
             exit 1
@@ -61,20 +60,20 @@ jobs:
           EXEC_ID=$(echo $RESPONSE | jq -r '.result.links.progress.id // .result.execution_id')
           
           # 進捗のポーリング待機
-          #STATUS="pending"
-          #while [ "$STATUS" = "pending" ] || [ "$STATUS" = "running" ]; do
-          #  sleep 5
-          #  PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
-          #    --header "Accept: application/json" \
-          #    --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
-          #  STATUS=$(echo $PROGRESS | jq -r '.result.status')
-          #done
+          STATUS="0"
+          while [ "$STATUS" = "0" ] || [ "$STATUS" = "1" ]; do
+            sleep 10
+            PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
+              --header "Accept: application/json" \
+              --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
+            STATUS=$(echo $PROGRESS | jq -r '.result.status')
+          done
           
-          #if [ "$STATUS" != "successful" ]; then
-          #  echo "Preview failed or conflicts detected: $PROGRESS"
-          #  exit 1
-          #fi
-          #echo "Preview completed successfully."
+          if [ "$STATUS" != "2" ]; then
+            echo "Preview failed or conflicts detected: $PROGRESS"
+            exit 1
+          fi
+          echo "Preview completed successfully."
 
       - name: 3. 更新セットのコミット (Commit)
         id: commit
@@ -87,23 +86,22 @@ jobs:
             )
           
           EXEC_ID=$(echo $RESPONSE | jq -r '.result.links.progress.id // .result.execution_id')
-          echo "$RESPONSE"
           
           # 進捗のポーリング待機
-          #STATUS="pending"
-          #while [ "$STATUS" = "pending" ] || [ "$STATUS" = "running" ]; do
-          #  sleep 5
-          #  PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
-          #    --header "Accept: application/json" \
-          #    --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
-          #  STATUS=$(echo $PROGRESS | jq -r '.result.status')
-          #done
+          STATUS="0"
+          while [ "$STATUS" = "0" ] || [ "$STATUS" = "1" ]; do
+            sleep 5
+            PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
+              --header "Accept: application/json" \
+              --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
+            STATUS=$(echo $PROGRESS | jq -r '.result.status')
+          done
           
-          #if [ "$STATUS" != "successful" ]; then
-          #  echo "Commit failed: $PROGRESS"
+          if [ "$STATUS" != "2" ]; then
+            echo "Commit failed: $PROGRESS"
           #  exit 1
-          #fi
-          #echo "Commit completed successfully."
+          fi
+          echo "Commit completed successfully."
 
       - name: 4. ATF テストスイートの実行 (Run ATF)
         id: atf
@@ -119,8 +117,8 @@ jobs:
           echo "ATF Execution ID: $EXEC_ID"
           
           # ATFの判定・結果監視
-          STATUS="pending"
-          while [ "$STATUS" = "pending" ] || [ "$STATUS" = "running" ]; do
+          STATUS="0"
+          while [ "$STATUS" = "0" ] || [ "$STATUS" = "1" ]; do
             sleep 10
             PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
               --header "Accept: application/json" \
@@ -131,7 +129,7 @@ jobs:
           TEST_RESULT=$(echo $RESULT | jq -r '.result.status')
           echo "ATF Execution Result: $TEST_RESULT"
           
-          if [ "$TEST_RESULT" != "successful" ] && [ "$TEST_RESULT" != "passed" ]; then
+          if [ "$TEST_RESULT" != "2" ] && [ "$TEST_RESULT" != "4" ]; then
             echo "ATF Test Suite Failed!"
             exit 1
           fi
