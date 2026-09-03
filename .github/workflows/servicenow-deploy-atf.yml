@@ -37,7 +37,7 @@ jobs:
             PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
               --header "Accept: application/json" \
               --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
-            STATUS=$(echo $PROGRESS | jq -r '.result.status')
+            STATUS=$(echo $PROGRESS | jq -r '.result.status_label')
           done
           
           if [ "$STATUS" != "successful" ]; then
