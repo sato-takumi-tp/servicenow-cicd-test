@@ -21,14 +21,11 @@ jobs:
         id: retrieve
         run: |
           echo "Starting Update Set Retrieve..."
-          RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/update_set/retrieve" \
+          RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/update_set/retrieve?update_set_id=${{ inputs.update_set_sys_id }}&update_source_id=${{ secrets.SN_DEV_UPDATE_SOURCE_SYS_ID }}" \
             --header "Accept: application/json" \
             --header "Content-Type: application/json" \
             --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}" \
-            --data '{
-              "remote_instance_sys_id": "${{ secrets.SN_DEV_UPDATE_SOURCE_SYS_ID }}",
-              "update_set_sys_id": "${{ inputs.update_set_sys_id }}"
-            }')
+            )
           
           EXEC_ID=$(echo $RESPONSE | jq -r '.result.links.progress.id // .result.execution_id')
           echo "Retrieve Execution ID: $EXEC_ID"
