@@ -31,7 +31,7 @@ jobs:
           echo "Retrieve Execution ID: $EXEC_ID"
           
           # 進捗のポーリング待機
-          STATUS="pending"
+          STATUS="0"
           while [ "$STATUS" = "0" ] || [ "$STATUS" = "1" ]; do
             sleep 5
             PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
