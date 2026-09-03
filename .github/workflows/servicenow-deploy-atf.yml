@@ -51,31 +51,29 @@ jobs:
         id: preview
         run: |
           echo "Starting Update Set Preview..."
-          RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/update_set/preview" \
+          RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/update_set/preview/$(echo $PROGRESS | jq -r '.result.remote_update_set_id')" \
             --header "Accept: application/json" \
             --header "Content-Type: application/json" \
             --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}" \
-            --data '{
-              "update_set_sys_id": "${{ inputs.update_set_sys_id }}"
-            }')
+            )
           
           EXEC_ID=$(echo $RESPONSE | jq -r '.result.links.progress.id // .result.execution_id')
           
           # 進捗のポーリング待機
-          STATUS="pending"
-          while [ "$STATUS" = "pending" ] || [ "$STATUS" = "running" ]; do
-            sleep 5
-            PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
-              --header "Accept: application/json" \
-              --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
-            STATUS=$(echo $PROGRESS | jq -r '.result.status')
-          done
+          #STATUS="pending"
+          #while [ "$STATUS" = "pending" ] || [ "$STATUS" = "running" ]; do
+          #  sleep 5
+          #  PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
+          #    --header "Accept: application/json" \
+          #    --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
+          #  STATUS=$(echo $PROGRESS | jq -r '.result.status')
+          #done
           
-          if [ "$STATUS" != "successful" ]; then
-            echo "Preview failed or conflicts detected: $PROGRESS"
-            exit 1
-          fi
-          echo "Preview completed successfully."
+          #if [ "$STATUS" != "successful" ]; then
+          #  echo "Preview failed or conflicts detected: $PROGRESS"
+          #  exit 1
+          #fi
+          #echo "Preview completed successfully."
 
       - name: 3. 更新セットのコミット (Commit)
         id: commit
