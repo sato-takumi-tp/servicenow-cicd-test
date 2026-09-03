@@ -21,7 +21,7 @@ jobs:
         id: retrieve
         run: |
           echo "Starting Update Set Retrieve..."
-          RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/update_set/retrieve?update_set_id=${{ inputs.update_set_sys_id }}&update_source_id=${{ secrets.SN_DEV_UPDATE_SOURCE_SYS_ID }}" \
+          RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/update_set/retrieve?update_set_id=${{ inputs.update_set_sys_id }}&update_source_id=${{ secrets.SN_DEV_UPDATE_SOURCE_SYS_ID }}&cleanup_retrieved=true" \
             --header "Accept: application/json" \
             --header "Content-Type: application/json" \
             --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}" \
@@ -33,7 +33,7 @@ jobs:
           # 進捗のポーリング待機
           #STATUS="0"
           #while [ "$STATUS" = "0" ] || [ "$STATUS" = "1" ]; do
-          #  sleep 5
+            sleep 10
             PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
               --header "Accept: application/json" \
               --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
