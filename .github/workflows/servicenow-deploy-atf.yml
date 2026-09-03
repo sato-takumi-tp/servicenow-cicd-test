@@ -39,7 +39,7 @@ jobs:
               --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
             echo "REMOTE_UPDATE_SET=$(echo $PROGRESS | jq -r '.result.remote_update_set_id')" >> $GITHUB_ENV
             STATUS=$(echo $PROGRESS | jq -r '.result.status')
-          #done
+          done
 
           echo "$STATUS"
           if [ "$STATUS" != "2" ]; then
