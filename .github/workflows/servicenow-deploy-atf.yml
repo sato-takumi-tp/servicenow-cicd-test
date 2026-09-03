@@ -31,8 +31,8 @@ jobs:
           echo "Retrieve Execution ID: $EXEC_ID"
           
           # 進捗のポーリング待機
-          #STATUS="0"
-          #while [ "$STATUS" = "0" ] || [ "$STATUS" = "1" ]; do
+          STATUS="0"
+          while [ "$STATUS" = 0 ] || [ "$STATUS" = 1 ]; do
             sleep 10
             PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
               --header "Accept: application/json" \
@@ -42,12 +42,12 @@ jobs:
           #done
 
           echo "$STATUS"
-          #if [ "$STATUS" != "2" ]; then
-          #  echo "$STATUS"
-          #  echo "Retrieve failed: $PROGRESS"
-          #  exit 1
-          #fi
-          #echo "Retrieve completed successfully."
+          if [ "$STATUS" != 2 ]; then
+            echo "$STATUS"
+            echo "Retrieve failed: $PROGRESS"
+            exit 1
+          fi
+          echo "Retrieve completed successfully."
 
       - name: 2. 更新セットのプレビュー (Preview)
         id: preview
