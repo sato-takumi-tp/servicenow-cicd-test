@@ -110,7 +110,7 @@ jobs:
         id: atf
         run: |
           echo "Starting ATF Test Suite Execution..."
-          RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/testsuite/run?test_suite_sys_id=${{ inputs.test_suite_sys_id }}" \
+          RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/testsuite/run?test_suite_sys_id=${{ inputs.test_suite_sys_id }}&browser_name=chorome&browser_version=152&os_name=Windows&os_version=10" \
             --header "Accept: application/json" \
             --header "Content-Type: application/json" \
             --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}" \
