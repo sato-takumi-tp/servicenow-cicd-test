@@ -51,6 +51,7 @@ jobs:
         id: preview
         run: |
           echo "Starting Update Set Preview..."
+          echo $PROGRESS | jq -r '.result.remote_update_set_id'
           RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/update_set/preview/$(echo $PROGRESS | jq -r '.result.remote_update_set_id')" \
             --header "Accept: application/json" \
             --header "Content-Type: application/json" \
