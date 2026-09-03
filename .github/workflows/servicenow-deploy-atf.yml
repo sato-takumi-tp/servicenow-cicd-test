@@ -52,8 +52,7 @@ jobs:
         id: preview
         run: |
           echo "Starting Update Set Preview..."
-          echo "$REMOTE_UPDATE_SET"
-          RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/update_set/preview/$(echo $PROGRESS | jq -r '.result.remote_update_set_id')" \
+          RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/update_set/preview/$REMOTE_UPDATE_SET" \
             --header "Accept: application/json" \
             --header "Content-Type: application/json" \
             --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}" \
@@ -81,7 +80,7 @@ jobs:
         id: commit
         run: |
           echo "Starting Update Set Commit..."
-          RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/update_set/commit/$(echo $PROGRESS | jq -r '.result.remote_update_set_id')" \
+          RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/update_set/commit/$REMOTE_UPDATE_SET" \
             --header "Accept: application/json" \
             --header "Content-Type: application/json" \
             --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}" \
