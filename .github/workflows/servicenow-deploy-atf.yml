@@ -1,0 +1,144 @@
+name: ServiceNow Update Set Deploy & ATF Execution
+
+on:
+  workflow_dispatch:
+    inputs:
+      update_set_sys_id:
+        description: '移送する更新セットの sys_id'
+        required: true
+        type: string
+      test_suite_sys_id:
+        description: '実行するATFテストスイートの sys_id'
+        required: true
+        type: string
+
+jobs:
+  deploy-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. 更新セットの取得 (Retrieve)
+        id: retrieve
+        run: |
+          echo "Starting Update Set Retrieve..."
+          RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/update_set/retrieve" \
+            --header "Accept: application/json" \
+            --header "Content-Type: application/json" \
+            --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}" \
+            --data '{
+              "remote_instance_sys_id": "${{ secrets.SN_DEV_UPDATE_SOURCE_SYS_ID }}",
+              "update_set_sys_id": "${{ inputs.update_set_sys_id }}"
+            }')
+          
+          EXEC_ID=$(echo $RESPONSE | jq -r '.result.links.progress.id // .result.execution_id')
+          echo "Retrieve Execution ID: $EXEC_ID"
+          
+          # 進捗のポーリング待機
+          STATUS="pending"
+          while [ "$STATUS" = "pending" ] || [ "$STATUS" = "running" ]; do
+            sleep 5
+            PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
+              --header "Accept: application/json" \
+              --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
+            STATUS=$(echo $PROGRESS | jq -r '.result.status')
+          done
+          
+          if [ "$STATUS" != "successful" ]; then
+            echo "Retrieve failed: $PROGRESS"
+            exit 1
+          fi
+          echo "Retrieve completed successfully."
+
+      - name: 2. 更新セットのプレビュー (Preview)
+        id: preview
+        run: |
+          echo "Starting Update Set Preview..."
+          RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/update_set/preview" \
+            --header "Accept: application/json" \
+            --header "Content-Type: application/json" \
+            --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}" \
+            --data '{
+              "update_set_sys_id": "${{ inputs.update_set_sys_id }}"
+            }')
+          
+          EXEC_ID=$(echo $RESPONSE | jq -r '.result.links.progress.id // .result.execution_id')
+          
+          # 進捗のポーリング待機
+          STATUS="pending"
+          while [ "$STATUS" = "pending" ] || [ "$STATUS" = "running" ]; do
+            sleep 5
+            PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
+              --header "Accept: application/json" \
+              --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
+            STATUS=$(echo $PROGRESS | jq -r '.result.status')
+          done
+          
+          if [ "$STATUS" != "successful" ]; then
+            echo "Preview failed or conflicts detected: $PROGRESS"
+            exit 1
+          fi
+          echo "Preview completed successfully."
+
+      - name: 3. 更新セットのコミット (Commit)
+        id: commit
+        run: |
+          echo "Starting Update Set Commit..."
+          RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/update_set/commit" \
+            --header "Accept: application/json" \
+            --header "Content-Type: application/json" \
+            --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}" \
+            --data '{
+              "update_set_sys_id": "${{ inputs.update_set_sys_id }}"
+            }')
+          
+          EXEC_ID=$(echo $RESPONSE | jq -r '.result.links.progress.id // .result.execution_id')
+          
+          # 進捗のポーリング待機
+          STATUS="pending"
+          while [ "$STATUS" = "pending" ] || [ "$STATUS" = "running" ]; do
+            sleep 5
+            PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
+              --header "Accept: application/json" \
+              --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
+            STATUS=$(echo $PROGRESS | jq -r '.result.status')
+          done
+          
+          if [ "$STATUS" != "successful" ]; then
+            echo "Commit failed: $PROGRESS"
+            exit 1
+          fi
+          echo "Commit completed successfully."
+
+      - name: 4. ATF テストスイートの実行 (Run ATF)
+        id: atf
+        run: |
+          echo "Starting ATF Test Suite Execution..."
+          RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/now/v1/atf/testsuite/run" \
+            --header "Accept: application/json" \
+            --header "Content-Type: application/json" \
+            --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}" \
+            --data '{
+              "test_suite_sys_id": "${{ inputs.test_suite_sys_id }}"
+            }')
+          
+          EXEC_ID=$(echo $RESPONSE | jq -r '.result.execution_id')
+          echo "ATF Execution ID: $EXEC_ID"
+          
+          # ATFの判定・結果監視
+          STATUS="pending"
+          while [ "$STATUS" = "pending" ] || [ "$STATUS" = "running" ]; do
+            sleep 10
+            RESULT=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/now/v1/atf/execution/$EXEC_ID" \
+              --header "Accept: application/json" \
+              --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
+            STATUS=$(echo $RESULT | jq -r '.result.status')
+          done
+          
+          TEST_RESULT=$(echo $RESULT | jq -r '.result.status')
+          echo "ATF Execution Result: $TEST_RESULT"
+          
+          if [ "$TEST_RESULT" != "successful" ] && [ "$TEST_RESULT" != "passed" ]; then
+            echo "ATF Test Suite Failed!"
+            exit 1
+          fi
+          echo "ATF Test Suite Passed successfully!"
