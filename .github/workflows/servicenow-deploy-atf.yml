@@ -37,7 +37,7 @@ jobs:
             PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
               --header "Accept: application/json" \
               --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
-            echo "REMOTE_UPDATE_SET=$PROGRESS | jq -r '.result.remote_update_set_id'" >> $GITHUB_ENV
+            echo "REMOTE_UPDATE_SET=$(echo $PROGRESS | jq -r '.result.remote_update_set_id')" >> $GITHUB_ENV
           #  STATUS=$(echo $PROGRESS | jq -r '.result.status')
           #done
           
