@@ -34,15 +34,15 @@ jobs:
           #STATUS="0"
           #while [ "$STATUS" = "0" ] || [ "$STATUS" = "1" ]; do
           #  sleep 5
-          #  PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
-          #    --header "Accept: application/json" \
-          #    --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
+            PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
+              --header "Accept: application/json" \
+              --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
           #  STATUS=$(echo $PROGRESS | jq -r '.result.status')
           #done
           
           #if [ "$STATUS" != "2" ]; then
           #  echo "$STATUS"
-          #  echo "Retrieve failed: $PROGRESS"
+            echo "Retrieve failed: $PROGRESS"
           #  exit 1
           #fi
           #echo "Retrieve completed successfully."
