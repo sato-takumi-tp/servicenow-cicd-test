@@ -40,7 +40,8 @@ jobs:
             echo "REMOTE_UPDATE_SET=$(echo $PROGRESS | jq -r '.result.remote_update_set_id')" >> $GITHUB_ENV
           #  STATUS=$(echo $PROGRESS | jq -r '.result.status')
           #done
-          
+
+          echo "$STATUS"
           #if [ "$STATUS" != "2" ]; then
           #  echo "$STATUS"
           #  echo "Retrieve failed: $PROGRESS"
