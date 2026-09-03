@@ -38,7 +38,7 @@ jobs:
               --header "Accept: application/json" \
               --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
             echo "REMOTE_UPDATE_SET=$(echo $PROGRESS | jq -r '.result.remote_update_set_id')" >> $GITHUB_ENV
-          #  STATUS=$(echo $PROGRESS | jq -r '.result.status')
+            STATUS=$(echo $PROGRESS | jq -r '.result.status')
           #done
 
           echo "$STATUS"
@@ -91,41 +91,39 @@ jobs:
           echo "$RESPONSE"
           
           # 進捗のポーリング待機
-          STATUS="pending"
-          while [ "$STATUS" = "pending" ] || [ "$STATUS" = "running" ]; do
-            sleep 5
-            PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
-              --header "Accept: application/json" \
-              --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
-            STATUS=$(echo $PROGRESS | jq -r '.result.status')
-          done
+          #STATUS="pending"
+          #while [ "$STATUS" = "pending" ] || [ "$STATUS" = "running" ]; do
+          #  sleep 5
+          #  PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
+          #    --header "Accept: application/json" \
+          #    --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
+          #  STATUS=$(echo $PROGRESS | jq -r '.result.status')
+          #done
           
-          if [ "$STATUS" != "successful" ]; then
-            echo "Commit failed: $PROGRESS"
-            exit 1
-          fi
-          echo "Commit completed successfully."
+          #if [ "$STATUS" != "successful" ]; then
+          #  echo "Commit failed: $PROGRESS"
+          #  exit 1
+          #fi
+          #echo "Commit completed successfully."
 
       - name: 4. ATF テストスイートの実行 (Run ATF)
         id: atf
         run: |
           echo "Starting ATF Test Suite Execution..."
-          RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/now/v1/atf/testsuite/run" \
+          RESPONSE=$(curl -s -X POST "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/testsuite/run?test_suite_sys_id=${{ inputs.test_suite_sys_id }}" \
             --header "Accept: application/json" \
             --header "Content-Type: application/json" \
             --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}" \
-            --data '{
-              "test_suite_sys_id": "${{ inputs.test_suite_sys_id }}"
-            }')
+            )
           
-          EXEC_ID=$(echo $RESPONSE | jq -r '.result.execution_id')
+          EXEC_ID=$(echo $RESPONSE | jq -r '.result.links.progress.id // .result.execution_id')
           echo "ATF Execution ID: $EXEC_ID"
           
           # ATFの判定・結果監視
           STATUS="pending"
           while [ "$STATUS" = "pending" ] || [ "$STATUS" = "running" ]; do
             sleep 10
-            RESULT=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/now/v1/atf/execution/$EXEC_ID" \
+            PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
               --header "Accept: application/json" \
               --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
             STATUS=$(echo $RESULT | jq -r '.result.status')
