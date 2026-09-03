@@ -123,13 +123,10 @@ jobs:
             PROGRESS=$(curl -s -X GET "${{ secrets.SN_TEST_INSTANCE_URL }}/api/sn_cicd/progress/$EXEC_ID" \
               --header "Accept: application/json" \
               --user "${{ secrets.SN_USERNAME }}":"${{ secrets.SN_PASSWORD }}")
-            STATUS=$(echo $RESULT | jq -r '.result.status')
+            STATUS=$(echo $PROGRESS | jq -r '.result.status')
           done
           
-          TEST_RESULT=$(echo $RESULT | jq -r '.result.status')
-          echo "ATF Execution Result: $TEST_RESULT"
-          
-          if [ "$TEST_RESULT" != "2" ] && [ "$TEST_RESULT" != "4" ]; then
+          if [ "$STATUS" != "2" ] && [ "$STATUS" != "4" ]; then
             echo "ATF Test Suite Failed!"
             exit 1
           fi
